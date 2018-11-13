@@ -1,44 +1,43 @@
-// const { expect } = require('chai');
-// const sinon = require('sinon');
-// const WebSocket = require('ws');
-// const { startServer, send } = require('../src/ws-server');
+const { expect } = require('chai');
+const WebSocket = require('ws');
+const { startServer, send } = require('../src/ws-server');
 
-// describe('websocket client', () => {
-//   let client1;
-//   let client2;
-//   const client1Id = 'secretClientChannelId';
+describe('websocket client', () => {
+  let client1;
+  const client1Id = 'secretClientChannelId';
 
-//   before(() => {
-//     startServer({ port: 8080 });
-//   });
-//   beforeEach((done) => {
-//     client1 = new WebSocket(`ws://localhost:8080?client=${client1Id}`);
-//     client2 = new WebSocket('ws://localhost:8080?client=otherClient');
-//     client1.on('open', () => done());
-//   });
+  before(() => {
+    startServer({ port: 8080 });
+  });
+  beforeEach((done) => {
+    client1 = new WebSocket(`ws://localhost:8080?client=${client1Id}`);
+    client1.on('open', () => done());
+  });
 
-//   it('sends message to client', (done) => {
-//     const sentData = 'secretData';
-//     const spy = sinon.spy();
+  it('sends message to client', (done) => {
+    const sentData = 'secretData';
 
-//     client1.on('message', (message) => {
-//       spy(message);
-//     });
-//     send(client1Id, sentData);
-//     setTimeout(() => {
-//       sinon.assert.calledWith(spy, sentData);
-//       done();
-//     }, 1000);
-//   });
+    client1.on('message', (message) => {
+      expect(message).to.be.equal(sentData);
+      done();
+    });
+    send(client1Id, sentData);
+  });
 
-//   it("doesn't send data to other clients", (done) => {
-//     const sentData = 'secretData';
-//     const spy = sinon.spy();
-//     client2.on('message', spy);
-//     send(client1Id, sentData);
-//     setTimeout(() => {
-//       sinon.assert.calledOnce(spy);
-//       done();
-//     }, 1000);
-//   });
-// });
+  it('doesn\'t crash sending message to non-existent client', (done) => {
+    const sentData = 'secretData';
+    send('llolll', sentData);
+    setTimeout(() => done(), 100);
+  }).timeout(1000);
+
+
+  it('doesn\'t send message to closed client', (done) => {
+    const sentData = 'secretData';
+    client1.on('message', () => {
+      expect.fail();
+    });
+    client1.terminate();
+    send(client1Id, sentData);
+    setTimeout(() => done(), 100);
+  }).timeout(1000);
+});

@@ -5,28 +5,22 @@ const { subscribe } = require('../src/pub-sub');
 
 describe('pub-sub client', () => {
   let redisClient;
+  let redisClient2;
 
-  before(async () => {
+  before(() => {
     redisClient = redis.createClient();
+    redisClient2 = redis.createClient();
   });
 
   it('executes callback on message', (done) => {
-    const spy = sinon.spy();
-    subscribe(redisClient, 'notes', spy, {});
-    redisClient.publish('notes', 'test note', () => {
-      sinon.assert.calledOnce(spy);
-      done();
-    });
-  });
+    const channel = 'oobjecdj';
+    const message = 'fkldkad';
 
-  it('passes channel name and note content to the callback', (done) => {
-    const spy = sinon.spy();
-    const channel = 'test channel';
-    const note = 'test note';
-    subscribe(redisClient, channel, spy, {});
-    redisClient.publish(channel, note, () => {
-      sinon.assert.calledWith(spy, channel, note);
+    subscribe(redisClient2, (ch, msg) => {
+      expect(ch).to.be.equal(channel);
+      expect(msg).to.be.equal(message);
       done();
     });
+    redisClient.publish(channel, message);
   });
 });

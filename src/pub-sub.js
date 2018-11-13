@@ -1,9 +1,6 @@
-const { promisify } = require('util');
-
-const subscribe = async (redisClient, channel, onMessageCallback) => {
-  redisClient.on('message', onMessageCallback);
-  const psubscribeAsync = promisify(redisClient.psubscribe).bind(redisClient);
-  await psubscribeAsync('*', onMessageCallback);
+const subscribe = (redisClient, onMessageCallback) => {
+  redisClient.on('pmessage', (pattern, channel, message) => onMessageCallback(channel, message));
+  redisClient.psubscribe('*');
 };
 
 module.exports = { subscribe };
